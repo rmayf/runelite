@@ -27,11 +27,15 @@ package net.runelite.client.plugins.grandexchange;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 import net.runelite.api.Client;
 import net.runelite.api.GrandExchangeOffer;
@@ -54,6 +58,9 @@ public class GrandExchangeOffersPanel extends JPanel
 	/*  The offers container, this will hold all the individual ge offers panels */
 	private final JPanel offerPanel = new JPanel();
 
+	/* The offers wrapper, this scrolling panel wraps the offers container */
+	private JScrollPane offersWrapper;
+
 	/*  The error panel, this displays an error message */
 	private final PluginErrorPanel errorPanel = new PluginErrorPanel();
 
@@ -65,6 +72,7 @@ public class GrandExchangeOffersPanel extends JPanel
 	private final ScheduledExecutorService executor;
 
 	private GrandExchangeOfferSlot[] offerSlotPanels = new GrandExchangeOfferSlot[MAX_OFFERS];
+	private List<GrandExchangeOfferSlot> offersHistory = new ArrayList<>();
 
 	public GrandExchangeOffersPanel(Client client, ItemManager itemManager, ScheduledExecutorService executor)
 	{
@@ -84,10 +92,16 @@ public class GrandExchangeOffersPanel extends JPanel
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 
-		/* This panel wraps the offers panel and limits its height */
-		JPanel offersWrapper = new JPanel(new BorderLayout());
+		/* This panel wraps the offers panel and provides the scrolling behaviour */
+		JPanel wrapper = new JPanel(new BorderLayout());
+		wrapper.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		wrapper.add(offerPanel, BorderLayout.NORTH);
+
+		offersWrapper = new JScrollPane(wrapper);
 		offersWrapper.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		offersWrapper.add(offerPanel, BorderLayout.NORTH);
+		offersWrapper.getVerticalScrollBar().setPreferredSize(new Dimension(12, 0));
+		offersWrapper.getVerticalScrollBar().setBorder(new EmptyBorder(0, 5, 0, 0));
+		offersWrapper.setVisible(false);
 
 		offerPanel.setLayout(new GridBagLayout());
 		offerPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -126,7 +140,8 @@ public class GrandExchangeOffersPanel extends JPanel
 		{
 			if (offerSlotPanels[slot] != null)
 			{
-				offerPanel.remove(offerSlotPanels[slot]);
+				//offerPanel.remove(offerSlotPanels[slot]);
+				offersHistory.add(offerSlotPanels[slot]);
 				offerSlotPanels[slot] = null;
 				revalidate();
 				repaint();
